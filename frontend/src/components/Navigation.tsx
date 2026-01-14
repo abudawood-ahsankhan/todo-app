@@ -1,15 +1,22 @@
 'use client';
 
-import { signOut } from '../lib/auth';
+import { useSession } from '../lib/auth';
 import { useRouter } from 'next/navigation';
 
 export default function Navigation() {
+  const { signOut } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
-    // For demo purposes, just redirect to login
-    // In a real implementation, this would call the actual signOut function
-    router.push('/login');
+    try {
+      await signOut();
+      // Redirect to login after successful sign out
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if sign out fails, redirect to login
+      router.push('/login');
+    }
   };
 
   return (

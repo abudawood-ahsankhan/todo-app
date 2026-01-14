@@ -34,8 +34,8 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const data = await taskApi.getTasks(filter, sortBy);
-      setTasks(data.tasks || []);
+      const tasksData = await taskApi.getTasks(filter, sortBy);
+      setTasks(tasksData || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {

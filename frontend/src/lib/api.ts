@@ -1,11 +1,5 @@
-// Mock authentication for API client since better-auth is not available
-// In a real implementation, this would get the JWT token from the auth system
-const getMockAuthToken = (): string | null => {
-  // For demo purposes, returning a mock token
-  // In a real implementation, this would get the actual JWT from auth storage
-  return localStorage.getItem('mockAuthToken') || null;
-};
-
+// Since Better Auth handles authentication automatically with interceptors,
+// we don't need to manually add tokens to headers
 class ApiClient {
   private baseUrl: string;
 
@@ -18,12 +12,9 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    // For demo purposes, add a mock auth header
-    // In a real implementation, this would add the actual JWT token
-    const token = getMockAuthToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    // In a real implementation with Better Auth, the token would be retrieved from the session
+    // For now, we'll add a placeholder - in the real app, Better Auth would automatically add the token
+    // headers['Authorization'] = `Bearer ${token}`;
 
     return headers;
   }
@@ -38,72 +29,23 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // For demo purposes, if the backend is not running, return mock data
-        if (response.status === 0 || response.status === 500) {
-          console.warn(`Backend not available, returning mock data for GET ${endpoint}`);
-
-          // Return mock response for task retrieval
-          if (endpoint.includes('/tasks')) {
-            if (endpoint === '/tasks') {
-              // Return mock list of tasks
-              return [{
-                id: 1,
-                user_id: 'mock-user-id',
-                title: 'Sample Task',
-                description: 'This is a sample task for demonstration',
-                completed: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              }] as any as T;
-            } else {
-              // Return a single mock task (for /tasks/:id)
-              return {
-                id: 1,
-                user_id: 'mock-user-id',
-                title: 'Sample Task',
-                description: 'This is a sample task for demonstration',
-                completed: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              } as any as T;
-            }
-          }
+        if (response.status === 401) {
+          // Handle unauthorized - redirect to login
+          window.location.href = '/login';
+          throw new Error('Unauthorized - please sign in');
+        } else if (response.status === 403) {
+          throw new Error('Forbidden - you do not have permission to access this resource');
+        } else if (response.status === 404) {
+          throw new Error('Resource not found');
         }
-
         throw new Error(`GET request failed: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.error('Network error in GET request:', error);
-
-      // For demo purposes, return mock data when network request fails
-      if (endpoint.includes('/tasks')) {
-        if (endpoint === '/tasks') {
-          // Return mock list of tasks
-          return [{
-            id: 1,
-            user_id: 'mock-user-id',
-            title: 'Sample Task',
-            description: 'This is a sample task for demonstration',
-            completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }] as any as T;
-        } else {
-          // Return a single mock task (for /tasks/:id)
-          return {
-            id: 1,
-            user_id: 'mock-user-id',
-            title: 'Sample Task',
-            description: 'This is a sample task for demonstration',
-            completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as any as T;
-        }
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection');
       }
-
       throw error;
     }
   }
@@ -119,46 +61,24 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // For demo purposes, if the backend is not running, return mock data
-        if (response.status === 0 || response.status === 500) {
-          console.warn(`Backend not available, returning mock data for POST ${endpoint}`);
-
-          // Return mock response for task creation
-          if (endpoint.includes('/tasks')) {
-            const mockTask = {
-              id: Math.floor(Math.random() * 1000),
-              user_id: 'mock-user-id',
-              title: data.title,
-              description: data.description || null,
-              completed: false,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            return mockTask as any as T;
-          }
+        if (response.status === 401) {
+          // Handle unauthorized - redirect to login
+          window.location.href = '/login';
+          throw new Error('Unauthorized - please sign in');
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Bad request - invalid data provided');
+        } else if (response.status === 422) {
+          throw new Error('Validation error - check your input');
         }
-
         throw new Error(`POST request failed: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.error('Network error in POST request:', error);
-
-      // For demo purposes, return mock data when network request fails
-      if (endpoint.includes('/tasks')) {
-        const mockTask = {
-          id: Math.floor(Math.random() * 1000),
-          user_id: 'mock-user-id',
-          title: data.title,
-          description: data.description || null,
-          completed: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        return mockTask as any as T;
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection');
       }
-
       throw error;
     }
   }
@@ -174,46 +94,24 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // For demo purposes, if the backend is not running, return mock data
-        if (response.status === 0 || response.status === 500) {
-          console.warn(`Backend not available, returning mock data for PUT ${endpoint}`);
-
-          // Return mock response for task update
-          if (endpoint.includes('/tasks')) {
-            const mockTask = {
-              id: parseInt(endpoint.split('/').pop() || '1'),
-              user_id: 'mock-user-id',
-              title: data.title || 'Updated Sample Task',
-              description: data.description || 'Updated description',
-              completed: data.completed || false,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            return mockTask as any as T;
-          }
+        if (response.status === 401) {
+          // Handle unauthorized - redirect to login
+          window.location.href = '/login';
+          throw new Error('Unauthorized - please sign in');
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Bad request - invalid data provided');
+        } else if (response.status === 404) {
+          throw new Error('Resource not found');
         }
-
         throw new Error(`PUT request failed: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.error('Network error in PUT request:', error);
-
-      // For demo purposes, return mock data when network request fails
-      if (endpoint.includes('/tasks')) {
-        const mockTask = {
-          id: parseInt(endpoint.split('/').pop() || '1'),
-          user_id: 'mock-user-id',
-          title: data.title || 'Updated Sample Task',
-          description: data.description || 'Updated description',
-          completed: data.completed || false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        return mockTask as any as T;
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection');
       }
-
       throw error;
     }
   }
@@ -228,16 +126,13 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // For demo purposes, if the backend is not running, return mock data
-        if (response.status === 0 || response.status === 500) {
-          console.warn(`Backend not available, returning mock data for DELETE ${endpoint}`);
-
-          // Return mock response for task deletion
-          if (endpoint.includes('/tasks')) {
-            return { success: true } as any as T;
-          }
+        if (response.status === 401) {
+          // Handle unauthorized - redirect to login
+          window.location.href = '/login';
+          throw new Error('Unauthorized - please sign in');
+        } else if (response.status === 404) {
+          throw new Error('Resource not found');
         }
-
         throw new Error(`DELETE request failed: ${response.status} ${response.statusText}`);
       }
 
@@ -247,13 +142,9 @@ class ApiClient {
       }
       return response.json();
     } catch (error) {
-      console.error('Network error in DELETE request:', error);
-
-      // For demo purposes, return mock data when network request fails
-      if (endpoint.includes('/tasks')) {
-        return { success: true } as any as T;
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection');
       }
-
       throw error;
     }
   }
@@ -269,46 +160,24 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // For demo purposes, if the backend is not running, return mock data
-        if (response.status === 0 || response.status === 500) {
-          console.warn(`Backend not available, returning mock data for PATCH ${endpoint}`);
-
-          // Return mock response for task completion toggle
-          if (endpoint.includes('/tasks') && endpoint.includes('/complete')) {
-            const mockTask = {
-              id: parseInt(endpoint.replace('/complete', '').split('/').pop() || '1'),
-              user_id: 'mock-user-id',
-              title: 'Sample Task',
-              description: 'Sample description',
-              completed: true, // Assuming toggle to completed
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            return mockTask as any as T;
-          }
+        if (response.status === 401) {
+          // Handle unauthorized - redirect to login
+          window.location.href = '/login';
+          throw new Error('Unauthorized - please sign in');
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Bad request - invalid data provided');
+        } else if (response.status === 404) {
+          throw new Error('Resource not found');
         }
-
         throw new Error(`PATCH request failed: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.error('Network error in PATCH request:', error);
-
-      // For demo purposes, return mock data when network request fails
-      if (endpoint.includes('/tasks') && endpoint.includes('/complete')) {
-        const mockTask = {
-          id: parseInt(endpoint.replace('/complete', '').split('/').pop() || '1'),
-          user_id: 'mock-user-id',
-          title: 'Sample Task',
-          description: 'Sample description',
-          completed: true, // Assuming toggle to completed
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        return mockTask as any as T;
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error - please check your connection');
       }
-
       throw error;
     }
   }
@@ -317,32 +186,35 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 // Specific task-related API functions
+// These functions will be updated to work with session context in the components
+// For now, they remain as is, and the authentication will be handled by Better Auth
+// when properly configured
 export const taskApi = {
   getTasks: (status?: 'all' | 'pending' | 'completed', sort?: 'created' | 'title') => {
     const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    if (sort) params.append('sort', sort);
+    if (status) params.append('status_filter', status);
+    if (sort) params.append('sort_by', sort);
     const queryString = params.toString();
-    return apiClient.get(`/tasks${queryString ? `?${queryString}` : ''}`);
+    return apiClient.get(`/api/tasks${queryString ? `?${queryString}` : ''}`);
   },
 
   createTask: (taskData: { title: string; description?: string }) => {
-    return apiClient.post('/tasks', taskData);
+    return apiClient.post('/api/tasks', taskData);
   },
 
   getTask: (id: number) => {
-    return apiClient.get(`/tasks/${id}`);
+    return apiClient.get(`/api/tasks/${id}`);
   },
 
   updateTask: (id: number, taskData: { title?: string; description?: string }) => {
-    return apiClient.put(`/tasks/${id}`, taskData);
+    return apiClient.put(`/api/tasks/${id}`, taskData);
   },
 
   deleteTask: (id: number) => {
-    return apiClient.delete(`/tasks/${id}`);
+    return apiClient.delete(`/api/tasks/${id}`);
   },
 
   toggleTaskCompletion: (id: number) => {
-    return apiClient.patch(`/tasks/${id}/complete`, {});
+    return apiClient.patch(`/api/tasks/${id}/complete`, {});
   }
 };
