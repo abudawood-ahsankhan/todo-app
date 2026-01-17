@@ -184,37 +184,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-
-// Specific task-related API functions
-// These functions will be updated to work with session context in the components
-// For now, they remain as is, and the authentication will be handled by Better Auth
-// when properly configured
-export const taskApi = {
-  getTasks: (status?: 'all' | 'pending' | 'completed', sort?: 'created' | 'title') => {
-    const params = new URLSearchParams();
-    if (status) params.append('status_filter', status);
-    if (sort) params.append('sort_by', sort);
-    const queryString = params.toString();
-    return apiClient.get(`/api/tasks${queryString ? `?${queryString}` : ''}`);
-  },
-
-  createTask: (taskData: { title: string; description?: string }) => {
-    return apiClient.post('/api/tasks', taskData);
-  },
-
-  getTask: (id: number) => {
-    return apiClient.get(`/api/tasks/${id}`);
-  },
-
-  updateTask: (id: number, taskData: { title?: string; description?: string }) => {
-    return apiClient.put(`/api/tasks/${id}`, taskData);
-  },
-
-  deleteTask: (id: number) => {
-    return apiClient.delete(`/api/tasks/${id}`);
-  },
-
-  toggleTaskCompletion: (id: number) => {
-    return apiClient.patch(`/api/tasks/${id}/complete`, {});
-  }
-};

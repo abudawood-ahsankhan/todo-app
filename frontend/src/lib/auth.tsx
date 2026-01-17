@@ -37,13 +37,33 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const [status, setStatus] = useState<SessionContextType['status']>('loading');
 
   useEffect(() => {
-    // Simulate checking for existing session
+    // Check for existing session in localStorage
     const checkSession = () => {
-      // In a real implementation, this would check for actual session
-      // For now, we'll just set it to unauthenticated after a brief delay
-      setTimeout(() => {
-        setStatus('unauthenticated');
-      }, 300);
+      // Check if there's a stored token
+      if (typeof window !== 'undefined') {
+        const storedToken = localStorage.getItem('mock-jwt-token');
+        if (storedToken) {
+          // For mock implementation, we'll consider it valid if it exists
+          // We'll create a mock session based on the token
+          const tokenParts = storedToken.split('-');
+          const userId = tokenParts[2] || 'mock-user-id';
+          const mockSession: Session = {
+            user: {
+              id: userId,
+              email: 'user@example.com', // Default email
+              name: 'User',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+            token: storedToken
+          };
+          setSession(mockSession);
+          setStatus('authenticated');
+          return;
+        }
+      }
+      setStatus('unauthenticated');
     };
 
     checkSession();
@@ -52,18 +72,21 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const signIn = async (email: string, password: string) => {
     // Simulate signing in - in a real implementation, this would call the API
     setStatus('authenticated');
+    const userId = `user-${Date.now()}`; // Generate a unique user ID
     const mockSession: Session = {
       user: {
-        id: 'mock-user-id',
+        id: userId,
         email,
         name: email.split('@')[0], // Use part of email as name
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-      token: 'mock-jwt-token-for-testing'
+      token: `mock-jwt-${userId}`
     };
     setSession(mockSession);
+    // Store the token in localStorage for API client access
+    localStorage.setItem('mock-jwt-token', mockSession.token);
     return { session: mockSession };
   };
 
@@ -71,6 +94,8 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     // Simulate signing out - in a real implementation, this would call the API
     setSession(null);
     setStatus('unauthenticated');
+    // Clear the token from localStorage
+    localStorage.removeItem('mock-jwt-token');
   };
 
   return (
@@ -102,9 +127,11 @@ export const useSession = () => {
 // Helper function to get JWT token from session
 export const getSessionToken = async (): Promise<string | null> => {
   // In a real implementation, this would get the actual session token
-  // For now, return the mock token if available
-  const context = SessionContext._currentValue as SessionContextType | undefined;
-  return context?.session?.token || null;
+  // For now, return the mock token from localStorage
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('mock-jwt-token') || null;
+  }
+  return null;
 };
 
 // Function to check session validity
