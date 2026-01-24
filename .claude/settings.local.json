@@ -43,7 +43,16 @@
       "Bash(find ./frontend -name \"package.json\" -exec cat {} ;)",
       "Bash(find ./backend -name \"*.py\" -exec grep -l \"auth\\\\|jwt\\\\|session\" {} ;)",
       "Bash(cat ./frontend/src/components/ProtectedRoute.tsx)",
-      "Bash(cat -A)"
+      "Bash(cat -A)",
+      "Bash(npm run build)",
+      "Bash(python -m pip list)",
+      "Bash(python3 -m pip list)",
+      "Bash(pip install --upgrade pip setuptools wheel)",
+      "Bash(pip index versions pydantic-settings)",
+      "Bash(pip install fastapi==0.104.1 sqlmodel==0.0.8 pydantic==1.10.13 uvicorn==0.24.0 python-multipart==0.0.6 pyjwt==2.8.0 passlib==1.7.4 bcrypt==4.0.1 python-jose==3.3.0 sqlalchemy==1.4.41 psycopg2-binary==2.9.9 httpx==0.25.2 python-dotenv==1.0.0)",
+      "Bash(python -c \"import fastapi, sqlmodel, pydantic; print\\(''Backend dependencies successfully imported''\\)\")",
+      "Bash(python -c \"from src.main import *; print\\(''Backend main application imports successfully''\\)\")",
+      "Bash(npm run lint)"
     ]
   }
 }

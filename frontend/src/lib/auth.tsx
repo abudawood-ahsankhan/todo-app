@@ -134,11 +134,6 @@ export const getSessionToken = async (): Promise<string | null> => {
   return null;
 };
 
-// Function to check session validity
-export const checkSession = async (): Promise<Session | null> => {
-  const context = SessionContext._currentValue as SessionContextType | undefined;
-  return context?.session || null;
-};
 
 // Direct API functions (these will use the context)
 export const signIn = async (email: string, password: string) => {

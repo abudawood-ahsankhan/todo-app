@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from '../../lib/auth';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import Navigation from '../../components/Navigation';
@@ -24,13 +24,7 @@ export default function TasksPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [sortBy, setSortBy] = useState<'created' | 'title'>('created');
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchTasks();
-    }
-  }, [status, filter, sortBy]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -82,7 +76,13 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, sortBy]); // Add dependencies that fetchTasks uses
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchTasks();
+    }
+  }, [status, fetchTasks]); // Include fetchTasks in the dependency array
 
   const handleTaskCreated = (newTask: Task) => {
     setTasks([...tasks, newTask]);
